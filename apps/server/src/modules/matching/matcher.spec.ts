@@ -4,6 +4,7 @@ import {
   DistanceTier,
   Gender,
   Orientation,
+  getDistanceTier,
 } from '@sdumeet/shared'
 import {
   Candidate,
@@ -14,6 +15,7 @@ import {
   jaccard,
   orientationCompatible,
   pickTopCandidates,
+  scoreCandidate,
   SelfProfile,
 } from './matcher'
 
@@ -61,6 +63,9 @@ describe('cosineSimilarity', () => {
   it('空向量安全返回 0', () => {
     expect(cosineSimilarity([], [])).toBe(0)
   })
+  it('NaN 输入安全返回 0', () => {
+    expect(cosineSimilarity([NaN, 1], [1, 0])).toBe(0)
+  })
 })
 
 describe('jaccard', () => {
@@ -70,22 +75,40 @@ describe('jaccard', () => {
   it('完全不相交为 0', () => {
     expect(jaccard(['a'], ['b'])).toBe(0)
   })
+  it('重复标签不影响重合度', () => {
+    expect(jaccard(['a', 'a', 'b'], ['a', 'b', 'c'])).toBeCloseTo(2 / 3)
+  })
 })
 
 describe('orientationCompatible', () => {
   it('异性恋男女互洽', () => {
     expect(
-      orientationCompatible(Orientation.HETEROSEXUAL, Gender.MALE, Orientation.HETEROSEXUAL, Gender.FEMALE),
+      orientationCompatible(
+        Orientation.HETEROSEXUAL,
+        Gender.MALE,
+        Orientation.HETEROSEXUAL,
+        Gender.FEMALE,
+      ),
     ).toBe(true)
   })
   it('同为男性异性恋不互洽', () => {
     expect(
-      orientationCompatible(Orientation.HETEROSEXUAL, Gender.MALE, Orientation.HETEROSEXUAL, Gender.MALE),
+      orientationCompatible(
+        Orientation.HETEROSEXUAL,
+        Gender.MALE,
+        Orientation.HETEROSEXUAL,
+        Gender.MALE,
+      ),
     ).toBe(false)
   })
   it('双性恋可匹配两性', () => {
     expect(
-      orientationCompatible(Orientation.HETEROSEXUAL, Gender.FEMALE, Orientation.BISEXUAL, Gender.MALE),
+      orientationCompatible(
+        Orientation.HETEROSEXUAL,
+        Gender.FEMALE,
+        Orientation.BISEXUAL,
+        Gender.MALE,
+      ),
     ).toBe(true)
   })
 })
@@ -127,11 +150,39 @@ describe('pickTopCandidates', () => {
     const sameCity = makeCandidate({ userId: 'a', campus: CampusCode.CENTRAL })
     const crossCity = makeCandidate({ userId: 'b', campus: CampusCode.QINGDAO })
     const self = makeSelf({ distancePreference: DistancePreference.ANY_DISTANCE })
-    const result = pickTopCandidates(self, [sameCity, crossCity], DEFAULT_FILTER_OPTIONS, DEFAULT_WEIGHTS, 2)
+    const result = pickTopCandidates(
+      self,
+      [sameCity, crossCity],
+      DEFAULT_FILTER_OPTIONS,
+      DEFAULT_WEIGHTS,
+      2,
+    )
     const a = result.find((x) => x.userId === 'a')
     const b = result.find((x) => x.userId === 'b')
     expect(a).toBeDefined()
     expect(b).toBeDefined()
     expect(a!.score).toBeGreaterThan(b!.score)
+  })
+  it('有界 Top-K 与全量排序结果一致', () => {
+    const pool = Array.from({ length: 20 }, (_, i) =>
+      makeCandidate({
+        userId: 'c' + i,
+        valueVector: [1 - i * 0.01, i * 0.01, 0, 0, 0],
+        interests: ['兴趣' + (i % 7)],
+      }),
+    )
+    const self = makeSelf({ distancePreference: DistancePreference.ANY_DISTANCE })
+    const result = pickTopCandidates(self, pool, DEFAULT_FILTER_OPTIONS, DEFAULT_WEIGHTS, 5)
+    const expected = pool
+      .map((c) => scoreCandidate(self, c, getDistanceTier(self.campus, c.campus), DEFAULT_WEIGHTS))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+    expect(result.map((r) => r.userId)).toEqual(expected.map((r) => r.userId))
+    expect(result.map((r) => r.score)).toEqual(expected.map((r) => r.score))
+  })
+  it('匹配报告中的共同兴趣去重', () => {
+    const c = makeCandidate({ interests: ['篮球', '篮球', '摄影'] })
+    const result = pickTopCandidates(makeSelf(), [c], DEFAULT_FILTER_OPTIONS, DEFAULT_WEIGHTS, 1)
+    expect(result[0].sharedInterests).toEqual(['篮球', '摄影'])
   })
 })

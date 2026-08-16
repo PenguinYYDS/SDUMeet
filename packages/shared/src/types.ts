@@ -1,5 +1,12 @@
 import {
-  CampusCode, DistanceTier, Gender, LikeDecision, MessageType, Orientation, VerifyStatus,
+  CampusCode,
+  DistancePreference,
+  DistanceTier,
+  Gender,
+  LikeDecision,
+  MessageType,
+  Orientation,
+  VerifyStatus,
 } from './enums'
 
 // 统一响应包裹
@@ -31,7 +38,8 @@ export interface SubmitSurveyRequest {
 export interface UserSummary {
   id: string
   nickname: string
-  campus: CampusCode
+  // 用户可能尚未完善档案，campus 允许缺省
+  campus?: CampusCode
   city: string
   department: string
   grade: number
@@ -55,7 +63,7 @@ export interface UpdateProfileRequest {
   interests?: string[]
   smoke?: boolean
   acceptSmoker?: boolean
-  distancePreference?: import('./enums').DistancePreference
+  distancePreference?: DistancePreference
   minAge?: number
   maxAge?: number
   photos?: string[]

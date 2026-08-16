@@ -1,4 +1,15 @@
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Length, Max, Min } from 'class-validator'
+import {
+  ArrayMaxSize,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+  Max,
+  Min,
+} from 'class-validator'
 import { CampusCode, DistancePreference, Gender, Orientation } from '@sdumeet/shared'
 
 export class UpdateProfileDto {
@@ -32,6 +43,7 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: '生日格式应为 YYYY-MM-DD' })
   birthday?: string
 
   @IsOptional()
@@ -46,6 +58,7 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString({ each: true })
+  @ArrayMaxSize(20, { message: '兴趣标签最多 20 个' })
   interests?: string[]
 
   @IsOptional()
@@ -74,5 +87,6 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString({ each: true })
+  @ArrayMaxSize(9, { message: '照片最多 9 张' })
   photos?: string[]
 }

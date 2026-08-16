@@ -1,4 +1,4 @@
-import { SURVEY_QUESTIONS } from '../constants/surveyQuestions'
+import { SURVEY_QUESTIONS, VALUE_DIMENSIONS } from '../constants/surveyQuestions'
 
 export interface SurveyAnswerInput {
   questionId: string
@@ -10,11 +10,13 @@ export function computeSurveyVector(
   answers: SurveyAnswerInput[],
   questions = SURVEY_QUESTIONS,
 ): number[] {
-  const dim = 5
-  const sum = new Array(dim).fill(0)
+  const dim = VALUE_DIMENSIONS.length
+  const sum = new Array<number>(dim).fill(0)
+  // 预建索引：避免对每条作答线性查找题目（O(n·m) → O(n)）
+  const byId = new Map(questions.map((q) => [q.id, q]))
   let count = 0
   for (const a of answers) {
-    const q = questions.find((x) => x.id === a.questionId)
+    const q = byId.get(a.questionId)
     if (!q || !q.options[a.optionIndex]) continue
     const w = q.options[a.optionIndex].weights
     for (let i = 0; i < dim; i++) sum[i] += w[i] || 0

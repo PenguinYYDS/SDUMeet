@@ -9,6 +9,7 @@ export default function Survey() {
   const [questions, setQuestions] = useState<SurveyQuestion[]>([])
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, number>>({})
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     api
@@ -22,8 +23,8 @@ export default function Survey() {
   const q = questions[step]
   if (!q) {
     return (
-      <View className='page'>
-        <View className='hint'>问卷加载中…</View>
+      <View className="page">
+        <View className="hint">问卷加载中…</View>
       </View>
     )
   }
@@ -35,6 +36,8 @@ export default function Survey() {
       setStep(step + 1)
       return
     }
+    if (submitting) return
+    setSubmitting(true)
     try {
       await api.submitSurvey({
         version: 1,
@@ -43,24 +46,26 @@ export default function Survey() {
       Taro.switchTab({ url: '/pages/index/index' })
     } catch (e) {
       Taro.showToast({ title: String(e instanceof Error ? e.message : e), icon: 'none' })
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return (
-    <View className='page'>
-      <View className='progress'>
+    <View className="page">
+      <View className="progress">
         <Text>
           {step + 1} / {questions.length}
         </Text>
-        <View className='bar'>
+        <View className="bar">
           <View
-            className='bar-inner'
+            className="bar-inner"
             style={{ width: Math.round(((step + 1) / questions.length) * 100) + '%' }}
           />
         </View>
       </View>
-      <View className='card'>
-        <Text className='question'>{q.text}</Text>
+      <View className="card">
+        <Text className="question">{q.text}</Text>
         {q.options.map((opt, i) => (
           <View
             className={'option' + (answers[q.id] === i ? ' selected' : '')}
@@ -70,7 +75,7 @@ export default function Survey() {
             {opt.label}
           </View>
         ))}
-        <Text className='tip'>结果仅供匹配参考，非心理诊断</Text>
+        <Text className="tip">结果仅供匹配参考，非心理诊断</Text>
       </View>
     </View>
   )

@@ -14,6 +14,8 @@ export default function Index() {
   const [list, setList] = useState<DailyRecommendation[]>([])
   const [loading, setLoading] = useState(true)
   const [generated, setGenerated] = useState(false)
+  // 正在处理的推荐 id：防止连点导致重复提交
+  const [pendingId, setPendingId] = useState<string | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -38,6 +40,8 @@ export default function Index() {
   })
 
   const decide = async (rec: DailyRecommendation, decision: LikeDecision) => {
+    if (pendingId) return
+    setPendingId(rec.id)
     try {
       const r = await api.decide(rec.id, decision)
       setList((prev) => prev.filter((x) => x.id !== rec.id))
@@ -50,46 +54,56 @@ export default function Index() {
       }
     } catch (e) {
       Taro.showToast({ title: String(e instanceof Error ? e.message : e), icon: 'none' })
+    } finally {
+      setPendingId(null)
     }
   }
 
   return (
-    <View className='page'>
-      {loading && <View className='hint'>加载中…</View>}
+    <View className="page">
+      {loading && <View className="hint">加载中…</View>}
       {!loading && list.length === 0 && (
-        <View className='hint'>今日派单已处理完毕，明天再来～</View>
+        <View className="hint">今日派单已处理完毕，明天再来～</View>
       )}
       {list.map((rec) => (
-        <View className='card' key={rec.id}>
-          <View className='card-top'>
-            <Text className='nickname'>{rec.candidate.nickname}</Text>
-            <Text className='distance'>{DISTANCE_TIER_LABELS[rec.distanceTier]}</Text>
+        <View className="card" key={rec.id}>
+          <View className="card-top">
+            <Text className="nickname">{rec.candidate.nickname}</Text>
+            <Text className="distance">{DISTANCE_TIER_LABELS[rec.distanceTier]}</Text>
           </View>
-          <View className='meta'>
-            {CAMPUS_BY_CODE[rec.candidate.campus]?.name} · {rec.candidate.grade}级 ·{' '}
-            {rec.candidate.department}
+          <View className="meta">
+            {rec.candidate.campus ? CAMPUS_BY_CODE[rec.candidate.campus]?.name : ''} ·{' '}
+            {rec.candidate.grade}级 · {rec.candidate.department}
           </View>
-          <View className='bio'>{rec.candidate.bio || '这个人很神秘，什么都没写'}</View>
+          <View className="bio">{rec.candidate.bio || '这个人很神秘，什么都没写'}</View>
           {rec.candidate.interests.length > 0 && (
-            <View className='tags'>
+            <View className="tags">
               {rec.candidate.interests.slice(0, 4).map((t) => (
-                <Text className='tag' key={t}>
+                <Text className="tag" key={t}>
                   {t}
                 </Text>
               ))}
             </View>
           )}
-          <View className='report'>
+          <View className="report">
             为什么是 TA：
             {rec.report.sharedInterests.length > 0
               ? '共同兴趣 ' + rec.report.sharedInterests.join('、')
               : '你们的价值观看似互补，聊聊看'}
           </View>
-          <View className='actions'>
-            <Button className='btn-pass' onClick={() => decide(rec, LikeDecision.PASS)}>
+          <View className="actions">
+            <Button
+              className="btn-pass"
+              disabled={pendingId === rec.id}
+              onClick={() => decide(rec, LikeDecision.PASS)}
+            >
               跳过
             </Button>
-            <Button className='btn-like' onClick={() => decide(rec, LikeDecision.LIKE)}>
+            <Button
+              className="btn-like"
+              disabled={pendingId === rec.id}
+              onClick={() => decide(rec, LikeDecision.LIKE)}
+            >
               心动
             </Button>
           </View>
