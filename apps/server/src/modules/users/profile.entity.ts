@@ -32,10 +32,10 @@ export class Profile {
   @Column({ type: 'date', nullable: true })
   birthday: string
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   mbti: string | null
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   avatarUrl: string | null
 
   @Column({ type: 'jsonb', default: () => "'[]'" })

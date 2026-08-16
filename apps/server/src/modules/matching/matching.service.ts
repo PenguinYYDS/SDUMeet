@@ -13,6 +13,7 @@ import { SurveyAnswer } from '../survey/survey-answer.entity'
 import { Like } from './like.entity'
 import { Match } from './match.entity'
 import { Recommendation } from './recommendation.entity'
+import { ChatService } from '../chat/chat.service'
 import {
   Candidate,
   DEFAULT_FILTER_OPTIONS,
@@ -30,6 +31,7 @@ export class MatchingService {
     @InjectRepository(Recommendation) private readonly recs: Repository<Recommendation>,
     @InjectRepository(Like) private readonly likes: Repository<Like>,
     @InjectRepository(Match) private readonly matches: Repository<Match>,
+    private readonly chat: ChatService,
   ) {}
 
   private today(): string {
@@ -204,6 +206,8 @@ export class MatchingService {
     await this.matches.save(
       this.matches.create({ userAId: userId, userBId: rec.candidateId, score: rec.score }),
     )
+    // 配对成功即创建 1v1 聊天会话
+    await this.chat.ensureConversation(userId, rec.candidateId)
     await this.profiles.update({ userId }, { pairedWith: rec.candidateId })
     await this.profiles.update({ userId: rec.candidateId }, { pairedWith: userId })
     return { matched: true }
