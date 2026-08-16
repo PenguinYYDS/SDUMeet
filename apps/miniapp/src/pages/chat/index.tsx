@@ -19,23 +19,31 @@ export default function Chat() {
     api.getMe().then((me) => setMyId(me.id)).catch(() => {})
     api.getMessages(conversationId).then(setMessages).catch(() => {})
 
-    const task = Taro.connectSocket({
+    let disposed = false
+    Taro.connectSocket({
       url: WS_BASE + '/chat?token=' + encodeURIComponent(getToken()),
-    })
-    taskRef.current = task
-    task.onOpen(() => {
-      task.send({
-        data: JSON.stringify({ event: 'conversation:join', data: { conversationId } }),
-      })
-    })
-    task.onMessage((res) => {
-      const parsed = JSON.parse(res.data)
-      if (parsed.event === 'message:new') {
-        setMessages((prev) => [...prev, parsed.data])
+    }).then((task) => {
+      if (disposed) {
+        task.close({})
+        return
       }
-    })
+      taskRef.current = task
+      task.onOpen(() => {
+        task.send({
+          data: JSON.stringify({ event: 'conversation:join', data: { conversationId } }),
+        })
+      })
+      task.onMessage((res) => {
+        const parsed = JSON.parse(res.data)
+        if (parsed.event === 'message:new') {
+          setMessages((prev) => [...prev, parsed.data])
+        }
+      })
+    }).catch(() => {})
     return () => {
-      task.close({})
+      disposed = true
+      taskRef.current?.close({})
+      taskRef.current = null
     }
   }, [conversationId])
 

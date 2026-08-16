@@ -33,16 +33,16 @@ export class Profile {
   birthday: string
 
   @Column({ nullable: true })
-  mbti: string
+  mbti: string | null
 
   @Column({ nullable: true })
-  avatarUrl: string
+  avatarUrl: string | null
 
   @Column({ type: 'jsonb', default: () => "'[]'" })
   photos: string[]
 
   @Column({ type: 'text', nullable: true })
-  bio: string
+  bio: string | null
 
   @Column({ type: 'jsonb', default: () => "'[]'" })
   interests: string[]

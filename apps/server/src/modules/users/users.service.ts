@@ -22,9 +22,9 @@ export class UsersService {
       city: p ? CITY_NAMES[CAMPUS_BY_CODE[p.campus]?.city] : '',
       department: p?.department || '',
       grade: p?.grade || 0,
-      mbti: p?.mbti,
-      avatarUrl: p?.avatarUrl,
-      bio: p?.bio,
+      mbti: p?.mbti ?? undefined,
+      avatarUrl: p?.avatarUrl ?? undefined,
+      bio: p?.bio ?? undefined,
       interests: p?.interests || [],
       verifyStatus: user.verifyStatus,
     }

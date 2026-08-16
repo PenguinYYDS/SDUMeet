@@ -6,6 +6,8 @@ import {
   DistanceTier,
   Gender,
   Orientation,
+  VALUE_DIMENSIONS,
+  ValueDimension,
   getDistanceTier,
 } from '@sdumeet/shared'
 
@@ -50,7 +52,7 @@ export interface ScoredCandidate {
   score: number
   distanceTier: DistanceTier
   sharedInterests: string[]
-  sharedValueDims: number[]
+  sharedValueDims: ValueDimension[]
 }
 
 export interface HardFilterOptions {
@@ -160,7 +162,7 @@ export function scoreCandidate(
   }
 }
 
-function topValueDims(a: number[], b: number[], limit = 2): number[] {
+function topValueDims(a: number[], b: number[], limit = 2): ValueDimension[] {
   const scores: { index: number; v: number }[] = []
   for (let i = 0; i < a.length; i++) {
     if (a[i] > 0 && b[i] > 0) scores.push({ index: i, v: a[i] * b[i] })
@@ -168,7 +170,7 @@ function topValueDims(a: number[], b: number[], limit = 2): number[] {
   return scores
     .sort((x, y) => y.v - x.v)
     .slice(0, limit)
-    .map((x) => x.index)
+    .map((x) => VALUE_DIMENSIONS[x.index])
 }
 
 export function pickTopCandidates(
