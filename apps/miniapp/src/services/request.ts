@@ -35,7 +35,16 @@ export async function request<T>(
   })
   if (res.statusCode === 401) {
     clearToken()
-    Taro.navigateTo({ url: '/pages/auth/auth' })
+    // 仅当不在认证页时跳转，避免认证页自身 401 造成跳转循环
+    const pages = Taro.getCurrentPages()
+    const current = pages[pages.length - 1]?.route
+    if (current !== 'pages/auth/auth') {
+      try {
+        Taro.reLaunch({ url: '/pages/auth/auth' })
+      } catch {
+        // 导航失败（如已在跳转中）可忽略，token 已清除
+      }
+    }
     throw new Error('请先登录')
   }
   const body = res.data

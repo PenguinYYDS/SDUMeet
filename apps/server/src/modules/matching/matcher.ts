@@ -76,15 +76,20 @@ export function cosineSimilarity(a: number[], b: number[]): number {
     nb += b[i] * b[i]
   }
   if (na === 0 || nb === 0) return 0
-  return dot / (Math.sqrt(na) * Math.sqrt(nb))
+  const result = dot / (Math.sqrt(na) * Math.sqrt(nb))
+  // 异常值（NaN/Infinity）防护：脏数据不参与打分
+  return Number.isFinite(result) ? result : 0
 }
 
 export function jaccard(a: string[], b: string[]): number {
-  if (a.length === 0 && b.length === 0) return 0
-  const set = new Set(a)
+  // 去重后计算：重复标签不影响重合度；遍历较小集合减少比较次数
+  const setA = new Set(a)
+  const setB = new Set(b)
+  if (setA.size === 0 && setB.size === 0) return 0
+  const [small, large] = setA.size <= setB.size ? [setA, setB] : [setB, setA]
   let inter = 0
-  for (const x of b) if (set.has(x)) inter++
-  const union = a.length + b.length - inter
+  for (const x of small) if (large.has(x)) inter++
+  const union = setA.size + setB.size - inter
   return union === 0 ? 0 : inter / union
 }
 
@@ -129,7 +134,9 @@ export function hardFilter(
   opts: HardFilterOptions = DEFAULT_FILTER_OPTIONS,
 ): string | null {
   if (candidate.userId === self.userId) return 'self'
-  if (!orientationCompatible(self.orientation, self.gender, candidate.orientation, candidate.gender)) {
+  if (
+    !orientationCompatible(self.orientation, self.gender, candidate.orientation, candidate.gender)
+  ) {
     return 'orientation'
   }
   if (candidate.age < self.minAge || candidate.age > self.maxAge) return 'age'
@@ -149,15 +156,19 @@ export function scoreCandidate(
   const valueScore = cosineSimilarity(self.valueVector, candidate.valueVector)
   const interestScore = jaccard(self.interests, candidate.interests)
   const activity = activityScore(candidate.activeDays)
-  let score = weights.values * valueScore + weights.interests * interestScore + weights.activity * activity
+  let score =
+    weights.values * valueScore + weights.interests * interestScore + weights.activity * activity
   // 距离惩罚：同城跨校区 -0.05，跨城市 -0.15
   if (tier === DistanceTier.CROSS_CITY) score -= 0.15
   else if (tier === DistanceTier.SAME_CITY) score -= 0.05
+  // Set 交集：O(n) 完成，避免 includes 的 O(n²)；去重避免报告中出现重复标签
+  const selfInterests = new Set(self.interests)
+  const sharedInterests = [...new Set(candidate.interests)].filter((x) => selfInterests.has(x))
   return {
     userId: candidate.userId,
     score: Math.max(0, Math.min(1, Math.round(score * 10000) / 10000)),
     distanceTier: tier,
-    sharedInterests: candidate.interests.filter((x) => self.interests.includes(x)),
+    sharedInterests,
     sharedValueDims: topValueDims(self.valueVector, candidate.valueVector),
   }
 }
@@ -180,11 +191,19 @@ export function pickTopCandidates(
   weights: MatcherWeights = DEFAULT_WEIGHTS,
   limit = 5,
 ): ScoredCandidate[] {
-  const scored: ScoredCandidate[] = []
+  // 有界 Top-K：只保留前 limit 名，避免对全量候选排序（O(n·k)，k = limit）
+  const top: ScoredCandidate[] = []
   for (const c of pool) {
     const tier = getDistanceTier(self.campus, c.campus)
     if (hardFilter(self, c, tier, opts)) continue
-    scored.push(scoreCandidate(self, c, tier, weights))
+    const s = scoreCandidate(self, c, tier, weights)
+    const idx = top.findIndex((x) => s.score > x.score)
+    if (idx === -1) {
+      if (top.length < limit) top.push(s)
+    } else {
+      top.splice(idx, 0, s)
+      if (top.length > limit) top.pop()
+    }
   }
-  return scored.sort((a, b) => b.score - a.score).slice(0, limit)
+  return top
 }
