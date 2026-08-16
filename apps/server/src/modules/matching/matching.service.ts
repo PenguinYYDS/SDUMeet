@@ -55,9 +55,9 @@ export class MatchingService {
       city: '',
       department: p.department,
       grade: p.grade,
-      mbti: p.mbti,
-      avatarUrl: p.avatarUrl,
-      bio: p.bio,
+      mbti: p.mbti ?? undefined,
+      avatarUrl: p.avatarUrl ?? undefined,
+      bio: p.bio ?? undefined,
       interests: p.interests || [],
       verifyStatus: user.verifyStatus,
     }

@@ -11,7 +11,7 @@ export class User {
   studentId: string
 
   @Column({ nullable: true })
-  email: string
+  email: string | null
 
   @Column()
   nickname: string
