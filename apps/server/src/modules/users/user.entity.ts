@@ -10,7 +10,7 @@ export class User {
   @Column({ unique: true })
   studentId: string
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   email: string | null
 
   @Column()

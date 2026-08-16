@@ -8,7 +8,11 @@
     "build:weapp": "taro build --type weapp",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "browserslist": ["last 3 versions", "Android >= 4.1", "ios >= 8"],
+  "browserslist": [
+    "last 3 versions",
+    "Android >= 4.1",
+    "ios >= 8"
+  ],
   "dependencies": {
     "@babel/runtime": "^7.24.0",
     "@sdumeet/shared": "workspace:*",
@@ -25,8 +29,10 @@
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@babel/preset-react": "^7.24.1",
+    "@pmmmwh/react-refresh-webpack-plugin": "0.5.15",
     "@tarojs/cli": "^4.0.6",
     "@tarojs/plugin-framework-react": "^4.0.6",
+    "@tarojs/plugin-platform-h5": "4.2.1",
     "@tarojs/webpack5-runner": "^4.0.6",
     "@types/react": "^18.3.0",
     "@types/webpack-env": "^1.18.4",
