@@ -1,0 +1,25 @@
+{
+  "name": "sdumeet",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SDUMeet - 山东大学校园实名恋爱匹配平台（灵感来自上海交通大学 SJTU Date）",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev:server": "pnpm --filter @sdumeet/server start:dev",
+    "dev:miniapp": "pnpm --filter @sdumeet/miniapp dev:weapp",
+    "build": "pnpm build:shared && pnpm build:server && pnpm build:miniapp",
+    "build:shared": "pnpm --filter @sdumeet/shared build",
+    "build:server": "pnpm --filter @sdumeet/server build",
+    "build:miniapp": "pnpm --filter @sdumeet/miniapp build:weapp",
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  }
+}

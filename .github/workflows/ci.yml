@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+      - name: 类型检查（全部包）
+        run: pnpm typecheck
+      - name: 构建 shared
+        run: pnpm build:shared
+      - name: 后端单元测试
+        run: pnpm --filter @sdumeet/server test
+      - name: 构建后端
+        run: pnpm --filter @sdumeet/server build
+      - name: 构建小程序
+        run: pnpm --filter @sdumeet/miniapp build:weapp

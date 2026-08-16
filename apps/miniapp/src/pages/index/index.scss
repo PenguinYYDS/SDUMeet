@@ -1,0 +1,77 @@
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .nickname {
+    font-size: 36rpx;
+    font-weight: 600;
+  }
+
+  .distance {
+    font-size: 24rpx;
+    color: #a4133c;
+    background: #fdeef2;
+    border-radius: 999rpx;
+    padding: 4rpx 20rpx;
+  }
+}
+
+.meta {
+  color: #6b7280;
+  font-size: 26rpx;
+  margin-top: 8rpx;
+}
+
+.bio {
+  margin-top: 16rpx;
+  color: #374151;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 16rpx;
+
+  .tag {
+    background: #f3f4f6;
+    color: #4b5563;
+    font-size: 24rpx;
+    border-radius: 8rpx;
+    padding: 4rpx 16rpx;
+    margin-right: 12rpx;
+    margin-bottom: 8rpx;
+  }
+}
+
+.report {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #a4133c;
+}
+
+.actions {
+  display: flex;
+  margin-top: 24rpx;
+
+  Button {
+    flex: 1;
+    border-radius: 999rpx;
+    font-size: 30rpx;
+
+    &::after {
+      border: none;
+    }
+  }
+
+  .btn-pass {
+    background: #f3f4f6;
+    color: #6b7280;
+    margin-right: 16rpx;
+  }
+
+  .btn-like {
+    background: #a4133c;
+    color: #fff;
+  }
+}
